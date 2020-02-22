@@ -38,25 +38,17 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
-    //
-    // setTimeout(() => {
-    //   // this.invalidLogin=true;
-    //   // this.loading = false;
-    //   console.log(this.f.username.value)
-    //   console.log(this.f.password.value)
-    //   // this.router.navigate(['home' ,this.f.username.value ])
-    //
-    // }, 2000);
-
 
     this.loginService.login(this.f.username.value,this.f.password.value).
       subscribe(
         response =>{
           console.log(response)
+          this.loading=false;
           this.router.navigate(['/home', this.f.username.value] )
         },
       error =>{
           this.invalidLogin=true;
+          this.loading=false;
         console.log("eeeeeeeeeeeeeeeeee"+error)
       }
     )
