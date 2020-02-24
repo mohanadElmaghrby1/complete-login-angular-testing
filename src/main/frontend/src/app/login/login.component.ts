@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {ActivatedRoute, Router} from "@angular/router";
 import {LoginService} from "../services/login.service";
+import {User} from "./user.model";
+import {LoginCredentials} from "./loginCredentials.model";
 
 @Component({
   selector: 'app-login',
@@ -38,26 +40,18 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
-    //
-    // setTimeout(() => {
-    //   // this.invalidLogin=true;
-    //   // this.loading = false;
-    //   console.log(this.f.username.value)
-    //   console.log(this.f.password.value)
-    //   // this.router.navigate(['home' ,this.f.username.value ])
-    //
-    // }, 2000);
 
-
-    this.loginService.login(this.f.username.value,this.f.password.value).
+    this.loginService.login(new LoginCredentials(this.f.username.value,this.f.password.value)).
       subscribe(
-        response =>{
-          console.log(response)
-          this.router.navigate(['/home', this.f.username.value] )
+      (user :User) =>{
+          console.log(user.firstName)
+          this.loading=false;
+          this.router.navigate(['/home', user.firstName+" "+user.lastName] )
         },
-      error =>{
+      (error) =>{
           this.invalidLogin=true;
-        console.log("eeeeeeeeeeeeeeeeee"+error)
+          this.loading=false;
+        console.log(error)
       }
     )
   }

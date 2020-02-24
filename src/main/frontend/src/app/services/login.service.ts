@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {LoginCredentials} from "../login/loginCredentials.model";
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +11,8 @@ export class LoginService {
 
   }
 
-  login(username, password) {
-    return this.http.post("/api/login" , {username , password})
+  login(loginCredentials :LoginCredentials) {
+    return this.http.post(`http://localhost:8080/login`,loginCredentials)
   }
 
 }

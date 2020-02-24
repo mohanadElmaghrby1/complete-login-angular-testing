@@ -3,31 +3,35 @@ import { async, ComponentFixture, TestBed ,fakeAsync ,tick } from '@angular/core
 import { LoginComponent } from './login.component';
 import {LoginService} from "../services/login.service";
 import {DebugElement} from "@angular/core";
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AppRoutingModule} from "../app-routing.module";
 import {HomeComponent} from "../home/home.component";
 import {By} from "@angular/platform-browser";
-import {Observable} from "rxjs";
 
-describe('LoginComponent', () => {
-  let component: LoginComponent;
+describe('Login Component Integrated Test', () => {
   let fixture: ComponentFixture<LoginComponent>;
-  let loginService : LoginService
-  let debugElement : DebugElement
-  let loginspy : any
+  let loginSpy;
+  let routerSpy
+  let loginService: LoginService
+  let component:LoginComponent;
+  function updateForm(userEmail, userPassword) {
+    component.loginForm.controls['username'].setValue(userEmail);
+    component.loginForm.controls['password'].setValue(userPassword);
+  }
 
-  const testUserData = { id: 2, firstname: 'mohannad', lastname: 'elmaghrby'};
+  let debugElement;
 
   beforeEach(async(() => {
-    loginspy = jasmine.createSpyObj('LoginService' , ['login']);
+    loginSpy = jasmine.createSpyObj('LoginService' , ['login']);
+    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     TestBed.configureTestingModule({
       imports: [ReactiveFormsModule, FormsModule,AppRoutingModule],
       declarations: [ LoginComponent , HomeComponent ],
       providers: [
-        {provide: LoginService, useValue: loginspy}
+        {provide: LoginService, useValue: loginSpy}
       ]
     })
-    .compileComponents().then(()=>{
+      .compileComponents().then(()=>{
       fixture = TestBed.createComponent(LoginComponent);
       component = fixture.componentInstance;
       loginService = TestBed.get(LoginService)
@@ -37,15 +41,33 @@ describe('LoginComponent', () => {
   }));
 
 
-  it('should create the loginComponent', () => {
-    expect(component).toBeTruthy();
-    // console.log(component)
+  it('should create loginComponent', function () {
+    expect(component).toBeTruthy("couldnt create login component")
+    console.log(component.loginForm)
+
   });
 
-  it('should show username', function () {
-    component.loginForm.controls['username'].setValue('abcd');
-    fixture.detectChanges();
-    expect(component.loginForm.controls['username'].value).toBe('abcd')
+  it('should display alert message for invalid username or password', function () {
+    //setting user name value
+    component.loginForm.controls['username'].setValue('abc@gmail.com');
+    component.loginForm.controls['password'].setValue('abc');
+    //detect changes
+    fixture.detectChanges()
+
+    //simulate the login button clicked
+    component.submitted= true;
+
+    //simulate invalid login
+    component.invalidLogin=true;
+
+    fixture.detectChanges()
+
+    //get the invalid-feedback from the dom and make sure that only one displayed
+    const alertMessages = debugElement.queryAll(By.css('.alert-danger'));
+
+    //make sure that only one alert for password()
+    expect(alertMessages.length).toBe(1,'No Alert message displayed')
+
   });
 
   it('should display alert message fo empty password', function () {
@@ -67,7 +89,6 @@ describe('LoginComponent', () => {
   });
 
   it('should display two alert messages for empty password and username', function () {
-
     // component.loginForm.controls['username'].setValue('abcd');
     //simulate that login button clicked
     component.submitted=true;
@@ -85,44 +106,5 @@ describe('LoginComponent', () => {
       expect(alertDiv.length).toBe(2)
     // })
   });
-
-
-  it('loginService login() should called ', fakeAsync(() => {
-    updateForm('ahmed', 'abcd');
-    //simulate that login button clicked
-    // component.submitted=true;
-    // fixture.detectChanges();
-    const button = fixture.debugElement.nativeElement.querySelector('button');
-    button.click();
-    fixture.detectChanges();
-
-    expect(loginService.login).toHaveBeenCalled();
-  }));
-
-  it('should route to home if login successfully', fakeAsync(() => {
-    updateForm('mohannad', 'elmaghrby');
-    fixture.detectChanges();
-    const button = fixture.debugElement.nativeElement.querySelector('button');
-    button.click();
-    advance(fixture);
-
-    spyOn(loginService, 'login').and.returnValue(Observable.of);
-    advance(fixture);
-
-    expect(routerSpy.navigateByUrl).toHaveBeenCalled();
-    const navArgs = routerSpy.navigateByUrl.calls.first().args[0];
-    // expecting to navigate to id of the component's first hero
-    expect(navArgs).toBe('/home', 'should nav to Home Page');
-  }));
-
-  function advance(f: ComponentFixture<any>) {
-    tick();
-    f.detectChanges();
-  }
-
-  function updateForm(userEmail, userPassword) {
-    component.loginForm.controls['username'].setValue(userEmail);
-    component.loginForm.controls['password'].setValue(userPassword);
-  }
 
 });
